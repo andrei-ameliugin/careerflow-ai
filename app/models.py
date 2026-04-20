@@ -1,2 +1,5 @@
-"""Domain models will be added in Phase 1 increments."""
+"""ORM model imports used to register tables with SQLAlchemy metadata."""
 
+from app.db.models import Profile
+
+__all__ = ["Profile"]
