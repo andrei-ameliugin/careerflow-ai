@@ -27,7 +27,7 @@ Create a virtual environment, install the package, and start Streamlit:
 python -m venv .venv
 source .venv/bin/activate
 pip install -e .[dev]
-streamlit run app/main.py
+streamlit run streamlit_app.py
 ```
 
 ## Test
