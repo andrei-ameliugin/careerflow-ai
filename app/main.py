@@ -3,7 +3,7 @@ from __future__ import annotations
 import streamlit as st
 
 from app.config import get_settings
-from app.db import get_connection
+from app.db import SessionLocal, init_db
 
 
 def main() -> None:
@@ -13,14 +13,14 @@ def main() -> None:
     st.title(settings.app_name)
     st.caption("Phase 1 skeleton for a local-first hh.ru assistant")
 
-    connection = get_connection()
+    init_db()
+    session = SessionLocal()
     try:
-        st.success("SQLite connection initialized")
+        st.success("SQLite database initialized")
         st.write(f"Database path: `{settings.database_path}`")
     finally:
-        connection.close()
+        session.close()
 
 
 if __name__ == "__main__":
     main()
-

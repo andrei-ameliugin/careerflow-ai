@@ -1,9 +1,41 @@
-.venv/
+# Python
 __pycache__/
-*.pyc
+*.py[cod]
+*.pyo
+
+# Virtual environments
+.venv/
+venv/
+
+# Packaging / build artifacts
+*.egg-info/
+build/
+dist/
+
+# Testing / type checking
 .pytest_cache/
 .mypy_cache/
-.DS_Store
-data/*.sqlite3
-data/*.db
 
+# Environment variables
+.env
+.env.*
+
+# Logs
+*.log
+data/logs/
+
+# SQLite / local data
+*.db
+*.sqlite3
+data/*.db
+data/*.sqlite3
+
+# Streamlit
+.streamlit/
+
+# IDE
+.vscode/
+.idea/
+
+# macOS
+.DS_Store
