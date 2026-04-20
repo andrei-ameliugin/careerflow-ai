@@ -19,7 +19,7 @@ dependencies = [
 ]
 
 [tool.setuptools]
-packages = ["app"]
+packages = ["app", "app.core"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
