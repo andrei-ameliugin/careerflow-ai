@@ -19,7 +19,14 @@ dependencies = [
 ]
 
 [tool.setuptools]
-packages = ["app", "app.core", "app.db"]
+packages = [
+  "app",
+  "app.core",
+  "app.db",
+  "app.db.models",
+  "app.repositories",
+  "app.services",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
