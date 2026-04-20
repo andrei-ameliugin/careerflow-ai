@@ -2,8 +2,12 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
+from app.core import get_logger
 from app.db.models.profile import Profile
 from app.repositories import ProfileRepository
+
+
+logger = get_logger(__name__)
 
 
 class ProfileService:
@@ -24,7 +28,15 @@ class ProfileService:
             "hh_resume_url": self._normalize_hh_resume_url(hh_resume_url),
             "is_active": is_active,
         }
-        return self.repository.create_profile(**profile_data)
+        profile = self.repository.create_profile(**profile_data)
+        logger.info(
+            "Created profile id=%s name=%s target_title=%s is_active=%s",
+            profile.id,
+            profile.name,
+            profile.target_title,
+            profile.is_active,
+        )
+        return profile
 
     def list_profiles(self) -> Sequence[Profile]:
         return self.repository.list_profiles()
