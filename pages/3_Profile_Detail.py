@@ -9,19 +9,23 @@ from app.db import SessionLocal, init_db
 from app.db.models.profile import Profile
 from app.db.models.profile_fact import ProfileFact
 from app.db.models.resume_asset import ResumeAsset
+from app.db.models.run import Run
 from app.db.models.wizard_answer import WizardAnswer
 from app.repositories import (
     ProfileFactRepository,
     ProfileRepository,
     ResumeAssetRepository,
+    RunRepository,
     WizardAnswerRepository,
 )
 from app.services import (
     ProfileFactService,
     ProfileService,
     ResumeAssetService,
+    RunService,
     WizardAnswerService,
 )
+from app.services.run_service import SUPPORTED_RUN_MODES
 
 
 def load_profiles() -> Sequence[Profile]:
@@ -37,7 +41,7 @@ def load_profiles() -> Sequence[Profile]:
 def load_profile_detail(
     *,
     profile_id: int,
-) -> tuple[Profile | None, Sequence[ResumeAsset], Sequence[WizardAnswer], Sequence[ProfileFact]]:
+) -> tuple[Profile | None, Sequence[ResumeAsset], Sequence[WizardAnswer], Sequence[ProfileFact], Sequence[Run]]:
     init_db()
     session = SessionLocal()
     try:
@@ -45,17 +49,29 @@ def load_profile_detail(
         resume_asset_service = ResumeAssetService(ResumeAssetRepository(session))
         wizard_answer_service = WizardAnswerService(WizardAnswerRepository(session))
         profile_fact_service = ProfileFactService(ProfileFactRepository(session))
+        run_service = RunService(RunRepository(session))
 
         profile = profile_service.get_profile(profile_id=profile_id)
         if profile is None:
-            return None, [], [], []
+            return None, [], [], [], []
 
         return (
             profile,
             resume_asset_service.list_assets(profile_id=profile_id),
             wizard_answer_service.list_answers(profile_id=profile_id),
             profile_fact_service.list_facts(profile_id=profile_id),
+            run_service.list_runs(profile_id=profile_id),
         )
+    finally:
+        session.close()
+
+
+def create_draft_run(*, profile_id: int, mode: object) -> Run:
+    init_db()
+    session = SessionLocal()
+    try:
+        service = RunService(RunRepository(session))
+        return service.create_draft_run(profile_id=profile_id, mode=mode)
     finally:
         session.close()
 
@@ -143,6 +159,24 @@ def render_profile_facts(facts: Sequence[ProfileFact]) -> None:
             st.write(fact.content)
 
 
+def render_runs(runs: Sequence[Run]) -> None:
+    st.subheader("Runs")
+    if not runs:
+        st.info("No runs created for this profile yet.")
+        return
+
+    for run in runs:
+        with st.container(border=True):
+            left_column, right_column = st.columns([1, 3])
+            with left_column:
+                st.caption(f"Run #{run.id}")
+                st.write(run.status)
+            with right_column:
+                st.markdown(f"**Mode**: {run.mode}")
+                st.markdown(f"**Started**: {format_datetime(run.started_at)}")
+                st.markdown(f"**Finished**: {format_datetime(run.finished_at)}")
+
+
 def main() -> None:
     st.title("Profile Detail")
     st.caption("Review one profile together with its related resume assets, interview answers, and generated facts.")
@@ -170,17 +204,40 @@ def main() -> None:
     )
     st.query_params["profile_id"] = str(selected_profile.id)
 
-    profile, assets, answers, facts = load_profile_detail(profile_id=selected_profile.id)
+    selected_mode = st.selectbox(
+        "Run mode",
+        options=list(SUPPORTED_RUN_MODES),
+        index=0,
+    )
+    if st.button("Create Draft Run", type="primary", use_container_width=True):
+        try:
+            run = create_draft_run(profile_id=selected_profile.id, mode=selected_mode)
+        except ValueError as error:
+            st.error(str(error))
+        else:
+            st.session_state["profile_detail_success_message"] = (
+                f"Draft run #{run.id} created in {run.mode} mode."
+            )
+            st.rerun()
+
+    success_message = st.session_state.pop("profile_detail_success_message", None)
+    if success_message:
+        st.success(success_message)
+
+    profile, assets, answers, facts, runs = load_profile_detail(profile_id=selected_profile.id)
     if profile is None:
         st.error("The selected profile could not be loaded.")
         return
 
-    count_one, count_two, count_three = st.columns(3)
+    count_one, count_two, count_three, count_four = st.columns(4)
     count_one.metric("Resume Assets", len(assets))
     count_two.metric("Wizard Answers", len(answers))
     count_three.metric("Generated Facts", len(facts))
+    count_four.metric("Runs", len(runs))
 
     render_profile_summary(profile)
+    st.divider()
+    render_runs(runs)
     st.divider()
     render_resume_assets(assets)
     st.divider()

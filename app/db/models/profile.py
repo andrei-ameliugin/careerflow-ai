@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 
 from sqlalchemy import Boolean, DateTime, String, func
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
 
@@ -27,3 +27,4 @@ class Profile(Base):
         onupdate=func.now(),
         nullable=False,
     )
+    runs: Mapped[list["Run"]] = relationship(back_populates="profile")
