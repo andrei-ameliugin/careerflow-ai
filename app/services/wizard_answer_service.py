@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 
+from app.core import get_logger
 from app.db.models.wizard_answer import WizardAnswer
 from app.repositories.wizard_answer_repository import WizardAnswerRepository
 
@@ -28,6 +29,8 @@ INTERVIEW_QUESTIONS: tuple[tuple[str, str], ...] = (
         "Share a challenge, setback, or difficult collaboration that shows how you work through problems.",
     ),
 )
+
+logger = get_logger(__name__)
 
 
 class WizardAnswerService:
@@ -60,11 +63,18 @@ class WizardAnswerService:
             if normalized_answers[question_key]
         ]
 
-        return self.repository.replace_answers(
+        saved_answers = self.repository.replace_answers(
             profile_id=normalized_profile_id,
             answers=answer_records,
             question_keys=[question_key for question_key, _ in INTERVIEW_QUESTIONS],
         )
+        logger.info(
+            "Saved wizard answers profile_id=%s answer_count=%s question_keys=%s",
+            normalized_profile_id,
+            len(saved_answers),
+            ",".join(answer.question_key for answer in saved_answers),
+        )
+        return saved_answers
 
     def get_answers_by_key(self, *, profile_id: int) -> dict[str, str]:
         normalized_profile_id = self._validate_profile_id(profile_id)
