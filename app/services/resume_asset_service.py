@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
 from pathlib import Path
 from uuid import uuid4
 
@@ -57,6 +58,10 @@ class ResumeAssetService:
     def get_latest_asset(self, *, profile_id: int) -> ResumeAsset | None:
         normalized_profile_id = self._validate_profile_id(profile_id)
         return self.repository.get_latest_by_profile(normalized_profile_id)
+
+    def list_assets(self, *, profile_id: int) -> Sequence[ResumeAsset]:
+        normalized_profile_id = self._validate_profile_id(profile_id)
+        return self.repository.list_by_profile(normalized_profile_id)
 
     def _build_upload_path(self, *, profile_id: int, filename: str) -> Path:
         safe_name = Path(filename).name or "resume_upload"

@@ -82,6 +82,10 @@ class WizardAnswerService:
     def get_question_definitions(self) -> Sequence[tuple[str, str]]:
         return INTERVIEW_QUESTIONS
 
+    def list_answers(self, *, profile_id: int) -> Sequence[WizardAnswer]:
+        normalized_profile_id = self._validate_profile_id(profile_id)
+        return self.repository.list_by_profile(normalized_profile_id)
+
     def _validate_profile_id(self, profile_id: int) -> int:
         if profile_id <= 0:
             raise ValueError("profile_id must be positive")

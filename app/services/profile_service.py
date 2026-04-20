@@ -29,6 +29,11 @@ class ProfileService:
     def list_profiles(self) -> Sequence[Profile]:
         return self.repository.list_profiles()
 
+    def get_profile(self, *, profile_id: int) -> Profile | None:
+        if profile_id <= 0:
+            raise ValueError("profile_id must be positive")
+        return self.repository.get_profile(profile_id)
+
     def _validate_required_text(self, field_name: str, value: object) -> str:
         text = str(value).strip() if value is not None else ""
         if not text:

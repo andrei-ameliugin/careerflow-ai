@@ -20,6 +20,12 @@ class FakeProfileRepository:
     def list_profiles(self) -> list[Profile]:
         return self.profiles
 
+    def get_profile(self, profile_id: int) -> Profile | None:
+        for profile in self.profiles:
+            if profile.id == profile_id:
+                return profile
+        return None
+
 
 def test_create_profile_validates_required_fields() -> None:
     service = ProfileService(FakeProfileRepository())
@@ -69,3 +75,22 @@ def test_list_profiles_returns_repository_results() -> None:
     )
 
     assert service.list_profiles() == [created_profile]
+
+
+def test_get_profile_requires_positive_id() -> None:
+    service = ProfileService(FakeProfileRepository())
+
+    with pytest.raises(ValueError, match="profile_id must be positive"):
+        service.get_profile(profile_id=0)
+
+
+def test_get_profile_returns_repository_result() -> None:
+    repository = FakeProfileRepository()
+    service = ProfileService(repository)
+    created_profile = service.create_profile(
+        name="Alice",
+        target_title="Backend Engineer",
+    )
+    created_profile.id = 5
+
+    assert service.get_profile(profile_id=5) is created_profile
