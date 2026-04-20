@@ -93,3 +93,33 @@ def test_get_answers_by_key_returns_defaults_for_missing_questions() -> None:
     assert answers[METRICS_QUESTION_KEY] == ""
     assert answers[TOOLS_QUESTION_KEY] == ""
     assert answers[SOFT_SKILLS_QUESTION_KEY] == ""
+
+
+def test_list_answers_requires_positive_profile_id() -> None:
+    service = WizardAnswerService(FakeWizardAnswerRepository())
+
+    with pytest.raises(ValueError, match="profile_id must be positive"):
+        service.list_answers(profile_id=0)
+
+
+def test_list_answers_returns_repository_results() -> None:
+    repository = FakeWizardAnswerRepository()
+    repository.answers = [
+        WizardAnswer(
+            profile_id=8,
+            question_key=DEEP_DIVE_QUESTION_KEY,
+            question_text="Deep dive",
+            answer_text="Built internal tools",
+        ),
+        WizardAnswer(
+            profile_id=9,
+            question_key=TOOLS_QUESTION_KEY,
+            question_text="Tools",
+            answer_text="Python",
+        ),
+    ]
+    service = WizardAnswerService(repository)
+
+    answers = service.list_answers(profile_id=8)
+
+    assert [answer.question_key for answer in answers] == [DEEP_DIVE_QUESTION_KEY]

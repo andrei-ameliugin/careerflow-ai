@@ -21,6 +21,13 @@ class FakeResumeAssetRepository:
             return None
         return ResumeAsset(**self.created_assets[-1])
 
+    def list_by_profile(self, profile_id: int) -> list[ResumeAsset]:
+        return [
+            ResumeAsset(**asset_data)
+            for asset_data in self.created_assets
+            if asset_data["profile_id"] == profile_id
+        ]
+
 
 def test_save_pasted_text_validates_required_text() -> None:
     service = ResumeAssetService(FakeResumeAssetRepository())
@@ -74,3 +81,21 @@ def test_save_uploaded_file_keeps_binary_file_without_parsed_text(
 
     assert asset.raw_text == ""
     assert Path(asset.file_path).exists()
+
+
+def test_list_assets_requires_positive_profile_id() -> None:
+    service = ResumeAssetService(FakeResumeAssetRepository())
+
+    with pytest.raises(ValueError, match="profile_id must be positive"):
+        service.list_assets(profile_id=0)
+
+
+def test_list_assets_returns_repository_results() -> None:
+    repository = FakeResumeAssetRepository()
+    service = ResumeAssetService(repository)
+    service.save_pasted_text(profile_id=4, raw_text="Resume A")
+    service.save_pasted_text(profile_id=5, raw_text="Resume B")
+
+    assets = service.list_assets(profile_id=4)
+
+    assert [asset.raw_text for asset in assets] == ["Resume A"]
